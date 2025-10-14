@@ -1,0 +1,69 @@
+enum Genre {
+    COMEDY,
+    HORROR,
+    DRAMA,
+    THRILLER,
+    ACTION,
+    SCIFI,
+    FANTASY
+}
+
+type Actor {
+    id: ID!
+    fullname: String!
+    movies: [Movie!]!
+}
+
+type Director {
+    id: ID!
+    fullname: String!
+    movies: [Movie]!
+}
+
+type Movie {
+    id: ID!
+    title: String!
+    director: Director!
+    year: Int!
+    actors: [Actor!]!
+    rating: Float
+    numberOfGrades: Int
+    genre: Genre!
+}
+
+type Rating {
+    stars: Int!
+    movie: Movie!
+    userId: ID!
+}
+
+type User {
+    id: ID!
+    username: String!
+    email: String!
+    friends: [User]!
+    favoriteMovies: [Movie!]!
+}
+
+type Query {
+    movie(id: ID!): Movie!
+    movies: [Movie!]!
+    searchMovies(prefix: String): [Movie!]!
+    searchActors(prefix: String): [Actor!]!
+    user(id: ID!): User!
+    searchUsers(prefix: String): [User!]!
+    newMovies(limit: Int): [Movie!]!
+    recommendedMovies(userId: ID!): [Movie!]!
+    ratings(userId: ID!): [Rating!]!
+}
+
+input MovieInput {
+    id: ID!
+}
+
+type Mutation {
+    rateMovie(movieId: ID!, stars: Int!): Rating!
+    addFriend(id: ID!, friendID: ID!): User!
+    deleteRating(movieId: ID!): Boolean!
+    modifyUserRanking(movies: [MovieInput!]!): Boolean!
+}
