@@ -1,4 +1,5 @@
 from db.init_db import get_driver
+from repositories.mixins.PrefixMixin import PrefixMixin
 
 cmd1 =  """
         MATCH (m:Movie {id: $idx})<-[:IS_GENRE]-(g:Genre)
@@ -11,7 +12,7 @@ cmd2 =  """
         """
 
 
-class MovieRepository:
+class MovieRepository(PrefixMixin):
     def __init__(self):
         self.driver = get_driver()
 
@@ -23,8 +24,13 @@ class MovieRepository:
                 idx=idx
             )
             single = result.single()
+            if not single:
+                return None
             genre = single.get('genre')
             record = single.get('m')
+
+        if not record:
+            return None
 
         return {
             "id": record["id"],
@@ -42,9 +48,7 @@ class MovieRepository:
                 cmd,
                 movie_id=idx
             )
-            print(cmd)
             res = list(result)
-            print(res)
         return res
 
     def find_movie_actors_by_id(self, idx):
@@ -62,5 +66,11 @@ class MovieRepository:
         )
         return directors[0] if directors else None
 
+    def find_movie_starting_with_prefix(self, prefix):
+        return self.find_element_by_prefix(
+            element_name='Movie',
+            search_name='title',
+            prefix=prefix
+        )
 
 MovieRepo = MovieRepository()

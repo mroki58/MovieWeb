@@ -12,4 +12,12 @@ class DirectorRepository(ActorDirectorMixin):
             role="DIRECTED",
         )
 
+    def find_directors_by_prefix(self, prefix):
+        return self.find_element_by_prefix(
+            element_name="Director",
+            search_name="fullname",
+            prefix=prefix,
+        )
+
+
 DirectorRepo = DirectorRepository(get_driver())

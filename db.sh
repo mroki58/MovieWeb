@@ -14,6 +14,6 @@ do
 done
 
 echo "Ładowanie init.cypher"
-docker exec -i neo4j-db cypher-shell -u neo4j -p udhuhsdfuhs126hifds < ./neo4j/init.cypher
+docker exec -i neo4j-db cypher-shell -u neo4j -p udhuhsdfuhs126hifds < ./db/init.cypher
 
 echo "Gotowe!"

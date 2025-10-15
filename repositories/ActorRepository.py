@@ -1,7 +1,9 @@
 from db.init_db import get_driver
 from repositories.mixins import ActorDirectorMixin
+from repositories.mixins.PrefixMixin import PrefixMixin
 
-class ActorRepository(ActorDirectorMixin):
+
+class ActorRepository(ActorDirectorMixin, PrefixMixin):
     def __init__(self, driver):
         self.driver = driver
 
@@ -10,6 +12,13 @@ class ActorRepository(ActorDirectorMixin):
             actor_id,
             agent="Actor",
             role="ACTED_IN",
+        )
+
+    def find_actors_by_prefix(self, prefix):
+        return self.find_element_by_prefix(
+            element_name="Actor",
+            search_name="fullname",
+            prefix=prefix,
         )
 
 ActorRepo = ActorRepository(get_driver())

@@ -1,16 +1,25 @@
 from ariadne.explorer import ExplorerApollo
 from ariadne import graphql_sync
-from gql.schema import schema
+
 import atexit
+from datetime import timedelta
 
 from flask import Flask, request, jsonify, Response
-from flask_jwt_extended import JWTManager, verify_jwt_in_request, get_jwt_identity
+from flask_jwt_extended import JWTManager
+import jwt as pyjwt
+
+from gql.error_formatter import custom_error_formatter
+from gql.schema import schema
 
 from db.init_db import close_driver
 from routes.auth import auth_bp
 
 app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = "secret"
+app.config["JWT_COOKIE_SECURE"] = False
+app.config["JWT_COOKIE_SAMESITE"] = "Lax"
+app.config["JWT_ACCESS_COOKIE_NAME"] = "access_token_cookie"
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)
 jwt = JWTManager(app)
 app.register_blueprint(auth_bp)
 
@@ -23,9 +32,11 @@ def gql_interface():
 @app.route("/graphql", methods=["POST"])
 def graphql_server():
     try:
-        verify_jwt_in_request(optional=True)
-        userId = get_jwt_identity()
-    except:
+        token = request.cookies.get("access_token_cookie")
+        payload = pyjwt.decode(token, app.config["JWT_SECRET_KEY"], algorithms=["HS256"])
+        userId = payload['sub']
+    except Exception as e:
+        print("JWT error:", e)
         userId = None
 
     data = request.get_json()
@@ -33,7 +44,8 @@ def graphql_server():
         schema,
         data,
         context_value={"request": request, "userId": userId},
-        debug=True
+        debug=True,
+        error_formatter=custom_error_formatter
     )
     status_code = 200 if success else 400
     return jsonify(result), status_code

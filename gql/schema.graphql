@@ -8,11 +8,6 @@ enum Genre {
     FANTASY
 }
 
-interface Person {
-    id: ID!,
-    fullname: String!
-}
-
 type Actor {
     id: ID!
     fullname: String!
@@ -37,14 +32,14 @@ type Movie {
 type Rating {
     stars: Int!
     movie: Movie!
-    userId: ID!
 }
 
 type User {
     id: ID!
     username: String!
     email: String!
-    friends: [User]!
+    favoriteGenres: [Genre!]! ##############
+    friends: [User!]!
     favoriteMovies: [Movie!]!
 }
 
@@ -52,13 +47,13 @@ type Query {
     movie(id: ID!): Movie! ######################
     actorsMovies(actorId: ID!): [Movie!]! #############
     directorsMovies(directorId: ID!): [Movie!]! ###########
-    searchMovies(prefix: String): [Movie!]!
-    searchActors(prefix: String): [Actor!]!
-    user(id: ID!): User!
-    searchUsers(prefix: String): [User]!
+    searchMovies(prefix: String): [Movie!]! ###########
+    searchActors(prefix: String): [Actor!]! ##########
+    user(id: ID!): User! ############
+    searchUsers(prefix: String): [User]! ###########
     newMovies(limit: Int): [Movie!]!
-    recommendedMovies(userId: ID!): [Movie]
-    ratings(userId: ID!): [Rating!]!
+    recommendedMovies(userId: ID!): [Movie!]!
+    ratings(userId: ID!): [Rating!]! ########
 }
 
 input MovieInput {
@@ -66,7 +61,7 @@ input MovieInput {
 }
 
 type Mutation {
-    rateMovie(movieId: ID!, stars: Int!): Rating!
+    rateMovie(movieId: ID!, stars: Int!): Rating! ###############
     addFriend(id: ID!, friendID: ID!): User!
     deleteRating(movieId: ID!): Boolean!
     modifyUserRanking(movies: [MovieInput!]!): Boolean!
