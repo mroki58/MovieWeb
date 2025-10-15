@@ -8,24 +8,27 @@ enum Genre {
     FANTASY
 }
 
+interface Person {
+    id: ID!,
+    fullname: String!
+}
+
 type Actor {
     id: ID!
     fullname: String!
-    movies: [Movie!]!
 }
 
 type Director {
     id: ID!
     fullname: String!
-    movies: [Movie]!
 }
 
 type Movie {
     id: ID!
     title: String!
-    director: Director!
+    director: Director #############
     year: Int!
-    actors: [Actor!]!
+    actors: [Actor!] ############
     rating: Float
     numberOfGrades: Int
     genre: Genre!
@@ -46,14 +49,15 @@ type User {
 }
 
 type Query {
-    movie(id: ID!): Movie!
-    movies: [Movie!]!
+    movie(id: ID!): Movie! ######################
+    actorsMovies(actorId: ID!): [Movie!]! #############
+    directorsMovies(directorId: ID!): [Movie!]! ###########
     searchMovies(prefix: String): [Movie!]!
     searchActors(prefix: String): [Actor!]!
     user(id: ID!): User!
-    searchUsers(prefix: String): [User!]!
+    searchUsers(prefix: String): [User]!
     newMovies(limit: Int): [Movie!]!
-    recommendedMovies(userId: ID!): [Movie!]!
+    recommendedMovies(userId: ID!): [Movie]
     ratings(userId: ID!): [Rating!]!
 }
 

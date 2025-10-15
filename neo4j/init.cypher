@@ -7,7 +7,7 @@ CREATE (:Genre {name: 'HORROR'});
 CREATE (:Genre {name: 'DRAMA'});
 CREATE (:Genre {name: 'THRILLER'});
 CREATE (:Genre {name: 'ACTION'});
-CREATE (:Genre {name: 'SCI-FI'});
+CREATE (:Genre {name: 'SCIFI'});
 CREATE (:Genre {name: 'FANTASY'});
 
 // --- 3. Aktorzy

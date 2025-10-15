@@ -6,7 +6,7 @@ import atexit
 from flask import Flask, request, jsonify, Response
 from flask_jwt_extended import JWTManager, verify_jwt_in_request, get_jwt_identity
 
-from db.init_db import close_driver, get_driver
+from db.init_db import close_driver
 from routes.auth import auth_bp
 
 app = Flask(__name__)
@@ -32,7 +32,7 @@ def graphql_server():
     success, result = graphql_sync(
         schema,
         data,
-        context_value={"request": request, "userId": userId, "driver": get_driver()},
+        context_value={"request": request, "userId": userId},
         debug=True
     )
     status_code = 200 if success else 400
