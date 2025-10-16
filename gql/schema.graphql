@@ -34,13 +34,18 @@ type Rating {
     movie: Movie!
 }
 
+type MovieListElement {
+    position: Int!
+    movie: Movie!
+}
+
 type User {
     id: ID!
     username: String!
     email: String!
     favoriteGenres: [Genre!]! ##############
     friends: [User!]! ###########
-    favoriteMovies: [Movie!]!
+    favoriteMovies: [MovieListElement!]! #############
 }
 
 type KeyValue {
@@ -56,7 +61,7 @@ type Query {
     searchActors(prefix: String): [Actor!]! ##########
     user(id: ID!): User! ############
     searchUsers(prefix: String): [User]! ###########
-    newMovies(limit: Int): [Movie!]!
+    newMovies(limit: Int): [Movie!]! ############
     recommendedMovies(userId: ID!): [Movie!]!
     ratings(userId: ID!): [Rating!]! ########
     friendRequestFromMe: [KeyValue!]! ########

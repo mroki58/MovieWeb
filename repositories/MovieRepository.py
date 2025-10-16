@@ -1,4 +1,5 @@
 from db.init_db import get_driver
+from helpers.utils import with_session
 from repositories.mixins.PrefixMixin import PrefixMixin
 
 cmd1 =  """
@@ -16,18 +17,18 @@ class MovieRepository(PrefixMixin):
     def __init__(self):
         self.driver = get_driver()
 
-    def find_movie_by_id(self, idx):
+    @with_session
+    def find_movie_by_id(self, idx, session=None):
         cmd = cmd1
-        with self.driver.session() as session:
-            result = session.run(
-                cmd,
-                idx=idx
-            )
-            single = result.single()
-            if not single:
-                return None
-            genre = single.get('genre')
-            record = single.get('m')
+        result = session.run(
+            cmd,
+            idx=idx
+        )
+        single = result.single()
+        if not single:
+            return None
+        genre = single.get('genre')
+        record = single.get('m')
 
         if not record:
             return None
@@ -41,14 +42,14 @@ class MovieRepository(PrefixMixin):
             "genre": genre
         }
 
-    def _find_movie_actors_director(self, idx, agent, role):
+    @with_session
+    def _find_movie_actors_director(self, idx, agent, role, session=None):
         cmd = cmd2.format(agent=agent, role=role)
-        with self.driver.session() as session:
-            result = session.run(
-                cmd,
-                movie_id=idx
-            )
-            res = list(result)
+        result = session.run(
+            cmd,
+            movie_id=idx
+        )
+        res = list(result)
         return res
 
     def find_movie_actors_by_id(self, idx):
@@ -72,5 +73,14 @@ class MovieRepository(PrefixMixin):
             search_name='title',
             prefix=prefix
         )
+
+    @with_session
+    def find_newest_movies(self, limit, session=None):
+        session.run(
+            """
+            MATCH (m:Movie)
+            """
+        )
+
 
 MovieRepo = MovieRepository()

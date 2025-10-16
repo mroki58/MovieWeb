@@ -2,11 +2,12 @@ import uuid
 
 from db.init_db import get_driver
 from helpers.utils import pick_fields, with_session
-from repositories.mixins.PrefixMixin import PrefixMixin
+from repositories.mixins import MovieQueryMixin
+from repositories.mixins import PrefixMixin
 
 
 
-class UserRepository(PrefixMixin):
+class UserRepository(PrefixMixin, MovieQueryMixin):
     fields_to_return = ["id", "username", "email"]
 
     def __init__(self, driver):
@@ -219,7 +220,6 @@ class UserRepository(PrefixMixin):
 
         record = result.single()
         friends = record["friends"] if record else []
-
         return friends
 
 
@@ -291,5 +291,13 @@ class UserRepository(PrefixMixin):
         for record in result:
             users.append(pick_fields(record, UserRepository.fields_to_return))
         return users
+
+    @with_session
+    def find_user_favorite_movies_by_id(self, idx, session=None):
+        return self._find_user_favorite_movies(
+            idx=idx,
+            session=session
+        )
+
 
 UserRepo = UserRepository(get_driver())

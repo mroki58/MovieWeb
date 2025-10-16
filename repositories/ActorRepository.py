@@ -1,9 +1,9 @@
 from db.init_db import get_driver
-from repositories.mixins import ActorDirectorMixin
+from repositories.mixins import MovieQueryMixin
 from repositories.mixins.PrefixMixin import PrefixMixin
 
 
-class ActorRepository(ActorDirectorMixin, PrefixMixin):
+class ActorRepository(MovieQueryMixin, PrefixMixin):
     def __init__(self, driver):
         self.driver = driver
 

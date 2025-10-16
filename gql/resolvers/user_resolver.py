@@ -24,6 +24,11 @@ def resolve_user_friends(obj, info, **kwargs):
     idx = obj.get('id')
     return UserRepo.find_user_friends_by_id(idx)
 
+@user.field("favoriteMovies")
+def resolve_user_favorite_movies(obj, info, **kwargs):
+    idx = obj.get('id')
+    return UserRepo.find_user_favorite_movies_by_id(idx)
+
 @query.field("ratings")
 def resolve_user_ratings(_, info, **kwargs):
     idx = kwargs.get('userId')

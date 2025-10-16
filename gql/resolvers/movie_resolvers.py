@@ -1,4 +1,3 @@
-from repositories.UserRepository import UserRepo
 from .types import query, movie
 from repositories.MovieRepository import MovieRepo
 from repositories.ActorRepository import ActorRepo
@@ -12,7 +11,7 @@ def resolve_movie(_, info, **kwargs):
 @movie.field("actors")
 def resolve_actors_for_movie(obj, info):
     idx = obj.get('id')
-    # return MovieRepo.find_movie_actors_by_id(idx)
+    return MovieRepo.find_movie_actors_by_id(idx)
 
 @movie.field("director")
 def resolve_director_for_movie(obj, info):
@@ -39,4 +38,7 @@ def resolve_actors_by_prefix(_, info, **kwargs):
     prefix = kwargs.get('prefix')
     return ActorRepo.find_actors_starting_with_prefix(prefix)
 
-
+@query.field("newMovies")
+def resolve_new_movies(_, info, **kwargs):
+    limit = kwargs.get('limit')
+    return MovieRepo.find_newest_movies(limit)
