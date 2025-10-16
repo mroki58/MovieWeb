@@ -1,6 +1,16 @@
 // --- 1. Czyszczenie
 MATCH (n) DETACH DELETE n;
 
+// Użytkownik nie ma dwóch n-tych miejsc
+CREATE CONSTRAINT unique_user_ranking IF NOT EXISTS
+FOR ()-[r:RANKED]-()
+REQUIRE (r.position, startNode(r).id) IS UNIQUE;
+
+// tylko jedna krawedź od użytkownika do filmu w rankingu
+CREATE CONSTRAINT unique_user_movie_ranking IF NOT EXISTS
+FOR ()-[r:RANKED]-()
+REQUIRE (startNode(r).id, endNode(r).id) IS UNIQUE;
+
 // --- 2. Gatunki filmowe
 CREATE (:Genre {name: 'COMEDY'});
 CREATE (:Genre {name: 'HORROR'});

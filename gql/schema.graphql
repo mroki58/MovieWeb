@@ -39,8 +39,13 @@ type User {
     username: String!
     email: String!
     favoriteGenres: [Genre!]! ##############
-    friends: [User!]!
+    friends: [User!]! ###########
     favoriteMovies: [Movie!]!
+}
+
+type KeyValue {
+    id: ID!,
+    name: String!
 }
 
 type Query {
@@ -54,15 +59,16 @@ type Query {
     newMovies(limit: Int): [Movie!]!
     recommendedMovies(userId: ID!): [Movie!]!
     ratings(userId: ID!): [Rating!]! ########
-}
-
-input MovieInput {
-    id: ID!
+    friendRequestFromMe: [KeyValue!]! ########
+    friendRequestToMe: [KeyValue!]! ########
 }
 
 type Mutation {
     rateMovie(movieId: ID!, stars: Int!): Rating! ###############
-    addFriend(id: ID!, friendID: ID!): User!
-    deleteRating(movieId: ID!): Boolean!
-    modifyUserRanking(movies: [MovieInput!]!): Boolean!
+    friendRequest(friend: String!): Boolean! ############
+    friendRequestAccept(friend: String!): Boolean! #########
+    friendRequestReject(friend: String!): Boolean! #########
+    deleteFriend(friend: String!): Boolean! ###############
+    deleteRating(movieId: ID!): Boolean! #############
+    modifyUserRanking(places: [Int!]!, movies: [ID!]!): Boolean! ##########
 }
