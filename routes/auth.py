@@ -21,6 +21,9 @@ def login():
 
     hashed_pw, idx = UserRepo.find_users_id_password_by_username(username)
 
+    if idx == 'err':
+        return jsonify({"success": False, "msg": "Username not found"}), 404
+
     if bcrypt.checkpw(password.encode("utf-8"), hashed_pw):
         access_token = create_access_token(identity=idx)
         resp = jsonify({"success": True, "msg": "Logged in successfully"})

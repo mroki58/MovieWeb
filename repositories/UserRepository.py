@@ -52,7 +52,9 @@ class UserRepository(PrefixMixin, MovieQueryMixin):
         if record:
             hashed_pw = record["password"].encode("utf-8")
             idx = record["id"]
-
+        else:
+            hashed_pw = ''
+            idx = 'err'
         return hashed_pw, idx
 
     @with_session

@@ -4,12 +4,12 @@ MATCH (n) DETACH DELETE n;
 // Użytkownik nie ma dwóch n-tych miejsc
 CREATE CONSTRAINT unique_user_ranking IF NOT EXISTS
 FOR ()-[r:RANKED]-()
-REQUIRE (r.position, startNode(r).id) IS UNIQUE;
+REQUIRE (r.position, r.userId) IS UNIQUE;
 
-// tylko jedna krawedź od użytkownika do filmu w rankingu
+//tylko jedna krawedź od użytkownika do filmu w rankingu
 CREATE CONSTRAINT unique_user_movie_ranking IF NOT EXISTS
-FOR ()-[r:RANKED]-()
-REQUIRE (startNode(r).id, endNode(r).id) IS UNIQUE;
+FOR ()-[r:RANKED]->()
+REQUIRE (r.userId, r.movieId) IS UNIQUE;
 
 // --- 2. Gatunki filmowe
 CREATE (:Genre {name: 'COMEDY'});
@@ -58,5 +58,5 @@ MATCH (m:Movie {id:'2'}), (g:Genre {name:'ACTION'}) CREATE (g)-[:IS_GENRE]->(m);
 // MATCH (u:User {id:'1'}), (m:Movie {id:'1'}) CREATE (u)-[:FAVORITE]->(m);
 // MATCH (u:User {id:'1'}), (m:Movie {id:'2'}) CREATE (u)-[:FAVORITE]->(m);
 
-// --- 11. Rating użytkownika
+// --- 11. Rating użytkownika // bedzie inny
 // MATCH (u:User {id:'1'}), (m:Movie {id:'1'}) CREATE (r:Rating {stars:5})-[:OF_MOVIE]->(m)-[:RATED_BY]->(u);
