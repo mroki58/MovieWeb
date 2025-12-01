@@ -9,7 +9,7 @@ cmd2 =  """
         MATCH (u:User {id: $idx})
         MATCH (u)-[r:RANKED]->(m:Movie)
         MATCH (m)<-[:IS_GENRE]-(g:Genre)
-        RETURN m, g.name as genre
+        RETURN m, g.name as genre, r.position as position
         ORDER BY r.position
         """
 
@@ -36,10 +36,20 @@ class MovieQueryMixin:
         cmd = cmd1.format(agent=agent, role=role)
         return self._do_query_with_movie(cmd, session=None, idx=idx)
 
+    @with_session
     def _find_user_favorite_movies(self, idx, session=None):
         cmd = cmd2
-        return self._do_query_with_movie(cmd, session=session, idx=idx)
+        result = session.run(cmd, idx=idx)
+        movies = []
+        for record in result:
+            movie_obj = pick_fields(record['m'], MovieQueryMixin.fields_to_return)
+            movie_obj['genre'] = record.get('genre')
+            movies.append({
+                'position': record.get('position'),
+                'movie': movie_obj
+            })
+        return movies
 
-    def _find_newest_movies(self,  limit):
+    def _find_newest_movies(self, limit):
         cmd = cmd3
         return self._do_query_with_movie(cmd, session=None,limit=limit)

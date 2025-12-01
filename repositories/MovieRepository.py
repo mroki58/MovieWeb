@@ -1,5 +1,5 @@
 from db.init_db import get_driver
-from helpers.utils import with_session
+from helpers.utils import with_session, pick_fields
 from repositories.mixins.PrefixMixin import PrefixMixin
 
 cmd1 =  """
@@ -11,6 +11,14 @@ cmd2 =  """
         MATCH (a:{agent})-[:{role}]->(m:Movie {{id: $movie_id}})
         RETURN a.id as id, a.fullname as fullname
         """
+
+
+def _record_to_movie(record, node_key='m', genre_key='genre'):
+    node = record.get(node_key)
+    if not node:
+        return None
+    genre = record.get(genre_key)
+    return pick_fields(node, ["id", "title", "year", "rating", "numberOfGrades"]) | {"genre": genre}
 
 
 class MovieRepository(PrefixMixin):
@@ -75,12 +83,89 @@ class MovieRepository(PrefixMixin):
         )
 
     @with_session
-    def find_newest_movies(self, limit, session=None):
-        session.run(
-            """
+    def find_newest_movies(self, limit=10, session=None):
+        cmd = """
             MATCH (m:Movie)
-            """
-        )
+            OPTIONAL MATCH (m)<-[:IS_GENRE]-(g:Genre)
+            RETURN m, g.name as genre
+            ORDER BY m.year DESC
+            LIMIT $limit
+        """
+        result = session.run(cmd, limit=limit)
+        movies = []
+        for record in result:
+            m = _record_to_movie(record)
+            if m:
+                movies.append(m)
+        return movies
+
+    @with_session
+    def find_newest_movies_with_cast(self, limit=10, session=None):
+        cmd = """
+            MATCH (m:Movie)
+            OPTIONAL MATCH (m)<-[:IS_GENRE]-(g:Genre)
+            WITH m, g
+            ORDER BY m.year DESC
+            LIMIT $limit
+            OPTIONAL MATCH (a:Actor)-[:ACTED_IN]->(m)
+            OPTIONAL MATCH (d:Director)-[:DIRECTED]->(m)
+            RETURN m, g.name as genre, collect({id: a.id, fullname: a.fullname}) as actors, head(collect({id: d.id, fullname: d.fullname})) as director
+        """
+        result = session.run(cmd, limit=limit)
+        out = []
+        for record in result:
+            movie_obj = _record_to_movie(record)
+            if not movie_obj:
+                continue
+            actors = record.get('actors') or []
+            director = record.get('director')
+            out.append({
+                'movie': movie_obj,
+                'actors': actors,
+                'director': director
+            })
+        return out
+
+    @with_session
+    def find_random_movies(self, limit=10, session=None):
+        cmd = """
+            MATCH (m:Movie)
+            OPTIONAL MATCH (m)<-[:IS_GENRE]-(g:Genre)
+            RETURN m, g.name as genre
+            ORDER BY rand()
+            LIMIT $limit
+        """
+        result = session.run(cmd, limit=limit)
+        movies = []
+        for record in result:
+            m = _record_to_movie(record)
+            if m:
+                movies.append(m)
+        return movies
+
+    @with_session
+    def find_movies_from_friends(self, user_id, exclude_user_id=None, limit=30, session=None):
+        if exclude_user_id is None:
+            exclude_user_id = user_id
+
+        cmd = """
+            MATCH (u:User {id:$user})-[:FRIEND]->(f:User)-[r]->(m:Movie)
+            WHERE type(r) IN ['RATED','RANKED']
+            OPTIONAL MATCH (ex:User {id:$exclude})-[er]->(m)
+            WHERE type(er) IN ['RATED','RANKED']
+            WITH m, er
+            WHERE er IS NULL
+            OPTIONAL MATCH (m)<-[:IS_GENRE]-(g:Genre)
+            RETURN DISTINCT m, g.name as genre
+            LIMIT $limit
+        """
+        result = session.run(cmd, user=user_id, exclude=exclude_user_id, limit=limit)
+        movies = []
+        for record in result:
+            m = _record_to_movie(record)
+            if m:
+                movies.append(m)
+        return movies
 
 
 MovieRepo = MovieRepository()

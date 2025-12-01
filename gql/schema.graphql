@@ -62,7 +62,7 @@ type Query {
     user(id: ID!): User! ############
     searchUsers(prefix: String): [User]! ###########
     newMovies(limit: Int): [Movie!]! ############
-    recommendedMovies(userId: ID!): [Movie!]!
+    recommendedMovies(userId: ID): [Movie!]!
     ratings(userId: ID!): [Rating!]! ########
     friendRequestFromMe: [KeyValue!]! ########
     friendRequestToMe: [KeyValue!]! ########
