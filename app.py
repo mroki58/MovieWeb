@@ -5,6 +5,7 @@ import atexit
 from datetime import timedelta
 
 from flask import Flask, request, jsonify, Response
+from flask_apscheduler import APScheduler
 from flask_jwt_extended import JWTManager
 import jwt as pyjwt
 
@@ -14,7 +15,11 @@ from gql.schema import schema
 from db.init_db import close_driver
 from routes.auth import auth_bp
 
+class APSConfig:
+    SCHEDULER_API_ENABLED = False
+
 app = Flask(__name__)
+app.config.from_object(APSConfig)
 app.config["JWT_SECRET_KEY"] = "secret"
 app.config["JWT_COOKIE_SECURE"] = False
 app.config["JWT_COOKIE_SAMESITE"] = "Lax"
@@ -22,6 +27,9 @@ app.config["JWT_ACCESS_COOKIE_NAME"] = "access_token_cookie"
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)
 jwt = JWTManager(app)
 app.register_blueprint(auth_bp)
+
+scheduler = APScheduler()
+scheduler.init_app(app)
 
 playground = ExplorerApollo(include_cookies=True)
 
@@ -52,5 +60,12 @@ def graphql_server():
 
 atexit.register(close_driver)
 
+@scheduler.task('interval', id='recalculate_movie_avgs', minutes=5, max_instances=1)
+def revalc_job():
+    from scripts.recalculate_movie_ratings import main as recalc_avgs
+    recalc_avgs()
+
+
 if __name__ == '__main__':
+    scheduler.start()
     app.run()
