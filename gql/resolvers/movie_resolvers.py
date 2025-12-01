@@ -1,4 +1,5 @@
 from repositories.UserRepository import UserRepo
+from helpers.utils import pick_fields
 from .types import query, movie
 from repositories.MovieRepository import MovieRepo
 from repositories.ActorRepository import ActorRepo
@@ -37,7 +38,27 @@ def resolve_movies_by_prefix(_, info, **kwargs):
 @query.field("searchActors")
 def resolve_actors_by_prefix(_, info, **kwargs):
     prefix = kwargs.get('prefix')
-    return ActorRepo.find_actors_starting_with_prefix(prefix)
+    # repo method is named `find_actors_by_prefix`
+    return ActorRepo.find_actors_by_prefix(prefix)
+
+
+@query.field("actor")
+def resolve_actor(_, info, **kwargs):
+    idx = kwargs.get('id')
+    # use prefix mixin to find by id
+    res = ActorRepo.find_element_by_prefix(element_name="Actor", search_name="id", prefix=idx)
+    if not res:
+        return None
+    return pick_fields(res[0], ["id", "fullname"])
+
+
+@query.field("director")
+def resolve_director(_, info, **kwargs):
+    idx = kwargs.get('id')
+    res = DirectorRepo.find_element_by_prefix(element_name="Director", search_name="id", prefix=idx)
+    if not res:
+        return None
+    return pick_fields(res[0], ["id", "fullname"])
 
 @query.field("newMovies")
 def resolve_new_movies(_, info, **kwargs):

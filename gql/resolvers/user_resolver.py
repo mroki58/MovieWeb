@@ -3,16 +3,38 @@ from graphql import GraphQLError
 from repositories.MovieRepository import MovieRepo
 from repositories.UserRepository import UserRepo
 from .types import query, user, mutation
+from graphql import GraphQLError
 
 @query.field("searchUsers")
 def resolve_users_by_prefix(_, info, **kwargs):
     prefix = kwargs.get('prefix')
-    return UserRepo.find_users_starting_with_prefix(prefix)
+    # user repository method is `find_users_by_prefix`
+    return UserRepo.find_users_by_prefix(prefix)
 
 @query.field("user")
 def resolve_user(_, info, **kwargs):
     idx = kwargs.get('id')
     return UserRepo.find_user_by_id(idx)
+
+
+@query.field("me")
+def resolve_me_query(_, info):
+    viewer = info.context.get('userId')
+    if not viewer:
+        return None
+    return UserRepo.find_user_by_id(viewer)
+
+
+@user.field("me")
+def resolve_user_me_field(obj, info, **kwargs):
+    # obj is a dict-like user object returned by find_user_by_id
+    viewer = info.context.get('userId')
+    if not viewer:
+        return False
+    try:
+        return str(obj.get('id')) == str(viewer)
+    except Exception:
+        return False
 
 @user.field("favoriteGenres")
 def resolve_user_favorite_genres(obj, info, **kwargs):
@@ -22,12 +44,33 @@ def resolve_user_favorite_genres(obj, info, **kwargs):
 @user.field("friends")
 def resolve_user_friends(obj, info, **kwargs):
     idx = obj.get('id')
-    return UserRepo.find_user_friends_by_id(idx)
+    return UserRepo.find_user_friends(idx)
 
 @user.field("favoriteMovies")
 def resolve_user_favorite_movies(obj, info, **kwargs):
     idx = obj.get('id')
     return UserRepo.find_user_favorite_movies_by_id(idx)
+
+
+@user.field("friendRequestFromMe")
+def resolve_user_friend_request_from_me(obj, info, **kwargs):
+    # Only meaningful when requesting the viewer's own User object
+    viewer = info.context.get('userId')
+    if not viewer:
+        return []
+    if str(obj.get('id')) != str(viewer):
+        return []
+    return UserRepo.find_friend_request_from_me(viewer)
+
+
+@user.field("friendRequestToMe")
+def resolve_user_friend_request_to_me(obj, info, **kwargs):
+    viewer = info.context.get('userId')
+    if not viewer:
+        return []
+    if str(obj.get('id')) != str(viewer):
+        return []
+    return UserRepo.find_friend_request_to_me(viewer)
 
 @query.field("ratings")
 def resolve_user_ratings(_, info, **kwargs):

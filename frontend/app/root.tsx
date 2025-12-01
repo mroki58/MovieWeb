@@ -11,6 +11,8 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import { Provider } from "react-redux";
 import AuthStore from "./store/authStore";
+import { ApolloProvider } from "@apollo/client/react";
+import apolloClient from "./apollo/client";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -46,7 +48,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <Provider store={AuthStore}>
-      <Outlet />
+      <ApolloProvider client={apolloClient}>
+        <Outlet />
+      </ApolloProvider>
     </Provider>
   );
 }

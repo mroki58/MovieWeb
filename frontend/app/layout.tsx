@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link, Outlet } from "react-router";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "./slice/authSlice";
 
@@ -10,9 +10,10 @@ export default function Layout() {
         dispatch(logout());
     }
     return (
+        <>
         <div>
             <nav>
-                <ul>
+                <ul style={{ display: 'flex', gap: '20px', padding: '10px', backgroundColor: '#f0f0f0' }}>
                     <li><Link to="/">Home</Link></li>
                     { !isLoggedIn ?
                     <>
@@ -28,5 +29,9 @@ export default function Layout() {
                 </ul>
             </nav>
         </div>
+        <div>
+            <Outlet />
+        </div>
+        </>
     )
 }

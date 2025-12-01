@@ -287,6 +287,8 @@ class UserRepository(PrefixMixin, MovieQueryMixin):
                 MATCH (u)-[r:FRIEND]->(f:User)
                 RETURN f
                 """
+                ,
+                id=idx
             )
             result = [record['f'] for record in result]
         users = []
