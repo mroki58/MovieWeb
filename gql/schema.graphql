@@ -68,12 +68,12 @@ type Query {
     directorsMovies(directorId: ID!): [Movie!]! ###########
     searchMovies(prefix: String): [Movie!]! ###########
     searchActors(prefix: String): [Actor!]! ##########
-    me: User!
+    me: User
     user(id: ID!): User! ############
     searchUsers(prefix: String): [User]! ###########
     newMovies(limit: Int): [Movie!]! ############
     recommendedMovies(userId: ID): [Movie!]!
-    rating(movieId: ID): Int!
+    rating(movieId: ID): Int
 }
 
 type Mutation {

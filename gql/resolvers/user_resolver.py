@@ -19,11 +19,13 @@ def resolve_user(_, info, **kwargs):
 
 @query.field("me")
 def resolve_me_query(_, info):
-    viewer = info.context.get('userId')
-    if not viewer:
+    try:
+        viewer = info.context.get('userId')
+        if not viewer:
+            return None
+        return UserRepo.find_user_by_id(viewer)
+    except GraphQLError:
         return None
-    return UserRepo.find_user_by_id(viewer)
-
 
 @user.field("me")
 def resolve_user_me_field(obj, info, **kwargs):
@@ -136,6 +138,7 @@ def resolve_delete_rating(_, info, **kwargs):
     movie = kwargs.get("movieId")
 
     UserRepo.unrate_movie(user, movie)
+    return True
 
 @mutation.field("friendRequest")
 def resolve_user_friend_request(_, info, **kwargs):
@@ -223,7 +226,10 @@ def resolve_modify_user_ranking(_, info, places, movies):
 @query.field("rating")
 def resolve_user_rate(_, info, **kwargs):
     user = info.context.get('userId')
-    if user is None:
-        raise GraphQLError('Authorization Error')
-    movie = kwargs.get("movieId")
-    return UserRepo.find_movie_stars_by_user_id(user, movie)
+    try:
+        if user is None:
+            raise GraphQLError('Authorization Error')
+        movie = kwargs.get("movieId")
+        return UserRepo.find_movie_stars_by_user_id(user, movie)
+    except GraphQLError as e:
+        return None
