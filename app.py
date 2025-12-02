@@ -59,13 +59,29 @@ def graphql_server():
     return jsonify(result), status_code
 
 atexit.register(close_driver)
+from datetime import datetime
 
-@scheduler.task('interval', id='recalculate_movie_avgs', minutes=5, max_instances=1)
+@scheduler.task(
+    "interval",
+    id="recalculate_movie_avgs",
+    minutes=5,
+    max_instances=1,
+    next_run_time=datetime.now(),  # odpali od razu po starcie
+)
 def revalc_job():
+    app.logger.info("[apscheduler] running revalc_job")
     from scripts.recalculate_movie_ratings import main as recalc_avgs
-    recalc_avgs()
+    try:
+        recalc_avgs()
+    except Exception as e:
+        app.logger.error("[apscheduler] revalc_job error: %s", e)
 
+
+if not scheduler.running:
+    app.logger.info("[apscheduler] starting scheduler")
+    scheduler.start()
 
 if __name__ == '__main__':
-    scheduler.start()
     app.run()
+
+

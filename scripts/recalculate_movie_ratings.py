@@ -1,14 +1,5 @@
 #!/usr/bin/env python3
-"""Recalculate and store average ratings and counts for all movies.
-
-This script updates each Movie node with two properties:
-- `rating` (average of r.stars from RATED relationships)
-- `numberOfGrades` (count of RATED relationships)
-
-Intended to be run periodically (e.g. from cron).
-"""
 from db.init_db import get_driver
-
 
 def main():
     driver = get_driver()

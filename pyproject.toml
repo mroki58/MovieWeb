@@ -11,4 +11,5 @@ dependencies = [
     "flask-jwt-extended>=4.7.1",
     "neo4j>=6.0.2",
     "python-dotenv>=1.1.1",
+    "requests>=2.32.5",
 ]
