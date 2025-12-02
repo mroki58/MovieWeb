@@ -130,6 +130,19 @@ class UserRepository(PrefixMixin, MovieQueryMixin):
         return res
 
     @with_session
+    def find_movie_stars_by_user_id(self, user, movie , session=None):
+        result = session.run(
+            """
+            MATCH (u:User {id: $user})-[r:RATED]->(m:Movie {id: $movie})
+            RETURN r.stars AS stars
+            """,
+            user=user,
+            movie=movie
+        )
+        res = result.single()
+        return res['stars']
+
+    @with_session
     def rate_movie(self, user, movie, stars, session=None):
         session.run(
             """
@@ -234,7 +247,7 @@ class UserRepository(PrefixMixin, MovieQueryMixin):
             cmd += 'MATCH (f:User)-[r:FRIEND_REQUEST]->(u:User {id: $me})'
 
         cmd +=  '''
-                RETURN collect({id: f.id, username: f.username}) as friends
+                RETURN collect(f) as friends
                 '''
 
         result = session.run(
@@ -242,9 +255,9 @@ class UserRepository(PrefixMixin, MovieQueryMixin):
             me=me,
         )
         record = result.single()
-        usernames = record['friends'] if record else []
+        friends = record['friends'] if record else []
 
-        return usernames
+        return friends
 
     def find_friend_request_from_me(self, me):
         return self.find_friend_requests(
@@ -266,12 +279,13 @@ class UserRepository(PrefixMixin, MovieQueryMixin):
             session.run(
                 """
                 MATCH (u:User {id: $user})
-                UNWIND $zipped AS pair
+                OPTIONAL MATCH (u)-[r:RANKED]->()
+                DELETE r
+                WITH u, $zipped AS zipped
+                UNWIND zipped AS pair
                 WITH u, pair[0] AS position, pair[1] AS movieId
                 MATCH (m:Movie {id: movieId})
-                OPTIONAL MATCH (u)-[r:RANKED]->(m)
-                DELETE r
-                MERGE (u)-[:RANKED {position: position}]->(m)
+                MERGE (u)-[:RANKED { position: position, userId: u.id, movieId: movieId }]->(m)
                 """,
                 user=user,
                 zipped=zipped

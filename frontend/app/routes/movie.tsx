@@ -19,15 +19,16 @@ const MOVIE_QUERY = gql`
 `;
 
 const ME_QUERY = gql`
-  query Me { me { id } }
+  query Me {
+    me {
+      id
+    }
+  }
 `;
 
 const RATINGS_BY_USER = gql`
-  query Ratings($userId: ID!) {
-    ratings(userId: $userId) {
-      stars
-      movie { id }
-    }
+  query Ratings($movieId: ID!) {
+    rating(movieId: $movieId)
   }
 `;
 
@@ -37,19 +38,24 @@ const RATE_MOVIE = gql`
   }
 `;
 
+const UNRATE_MOVIE = gql`
+  mutation deleteRating($movieId: ID!) {
+    deleteRating(movieId: $movieId)
+  }
+`
+
 export default function MoviePage() {
   const { id } = useParams();
-  const { data, loading, error } = useQuery(MOVIE_QUERY, { variables: { id } });
   const { data: meData } = useQuery(ME_QUERY);
-  const userId = meData?.me?.id;
-  const { data: ratingsData, refetch: refetchRatings } = useQuery(RATINGS_BY_USER, { variables: { userId }, skip: !userId });
+  const { data, loading, error } = useQuery(MOVIE_QUERY, { variables: { id } });
+  const { data: ratingsData, refetch: refetchRatings } = useQuery(RATINGS_BY_USER, { variables: { movieId: id }, skip: !id });
   const [rateMovie] = useMutation(RATE_MOVIE);
+  const [unrateMovie] = useMutation(UNRATE_MOVIE);
   const [myRating, setMyRating] = useState<number | null>(null);
 
   useEffect(() => {
-    if (ratingsData && ratingsData.ratings) {
-      const rec = ratingsData.ratings.find((r: any) => r.movie?.id === id);
-      setMyRating(rec ? rec.stars : null);
+    if (ratingsData && ratingsData.rating) {
+      setMyRating(ratingsData.rating);
     }
   }, [ratingsData, id]);
 
@@ -65,9 +71,9 @@ export default function MoviePage() {
       <div className="text-sm text-gray-600 mb-4">{movie.year} • {movie.genre}</div>
       <div className="mb-4">Rating: {movie.rating ?? "—"} ({movie.numberOfGrades ?? 0} votes)</div>
 
-      {userId ? (
+      {meData?.me?.id ? (
         <div className="mb-4">
-          <strong>Your rating:</strong>{' '}
+          <strong>Your rating:</strong> 
           <select value={myRating ?? ''} onChange={(e) => setMyRating(e.target.value === '' ? null : parseInt(e.target.value))} className="ml-2 p-1 border rounded">
             <option value="">—</option>
             {Array.from({ length: 11 }).map((_, i) => (
@@ -80,6 +86,12 @@ export default function MoviePage() {
             // refetch movie and ratings
             try { await refetchRatings(); } catch {}
           }}>Save</button>
+          <button className="ml-1 p-2 bg-red-600 text-white rounded" onClick={async () => {
+            setMyRating(null);
+            await unrateMovie({ variables: { movieId: id } });
+            // refetch movie and ratings
+            try { await refetchRatings(); } catch {}
+          }}>Clear</button>
         </div>
       ) : null}
 

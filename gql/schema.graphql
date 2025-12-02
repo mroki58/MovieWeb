@@ -1,3 +1,8 @@
+type KeyValue {
+    id: ID!,
+    name: String!
+}
+
 enum Genre {
     COMEDY,
     HORROR,
@@ -40,20 +45,19 @@ type MovieListElement {
 }
 
 type User {
-    id: ID!
+    id: ID
     username: String!
     email: String!
     favoriteGenres: [Genre!]! ##############
     friends: [User!]! ###########
     favoriteMovies: [MovieListElement!]! #############
-    me: Boolean
-    friendRequestFromMe: [KeyValue!]!
-    friendRequestToMe: [KeyValue!]!
-}
-
-type KeyValue {
-    id: ID!,
-    name: String!
+    me: Boolean!
+    isFriend: Boolean!
+    isPendingFromMe: Boolean
+    isPendingToMe: Boolean
+    pendingFromMe: [User!]!
+    pendingToMe: [User!]!
+    ratings: [Rating!]! ########
 }
 
 type Query {
@@ -64,14 +68,12 @@ type Query {
     directorsMovies(directorId: ID!): [Movie!]! ###########
     searchMovies(prefix: String): [Movie!]! ###########
     searchActors(prefix: String): [Actor!]! ##########
+    me: User!
     user(id: ID!): User! ############
     searchUsers(prefix: String): [User]! ###########
-    me: User
     newMovies(limit: Int): [Movie!]! ############
     recommendedMovies(userId: ID): [Movie!]!
-    ratings(userId: ID!): [Rating!]! ########
-    friendRequestFromMe: [KeyValue!]! ########
-    friendRequestToMe: [KeyValue!]! ########
+    rating(movieId: ID): Int!
 }
 
 type Mutation {

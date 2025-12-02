@@ -52,29 +52,44 @@ def resolve_user_favorite_movies(obj, info, **kwargs):
     return UserRepo.find_user_favorite_movies_by_id(idx)
 
 
-@user.field("friendRequestFromMe")
-def resolve_user_friend_request_from_me(obj, info, **kwargs):
-    # Only meaningful when requesting the viewer's own User object
-    viewer = info.context.get('userId')
-    if not viewer:
-        return []
-    if str(obj.get('id')) != str(viewer):
-        return []
-    return UserRepo.find_friend_request_from_me(viewer)
+def _friend_or_pending(obj, info, func):
+    friend_id = obj.get('id')
+    my_id = info.context.get('userId')
 
+    if my_id:
+        if friend_id == my_id:
+            return False
+        friends = func(my_id)
+        friends_ids = map(lambda x: x.get('id'), friends)
+        if friend_id in friends_ids:
+            return True
+    return False
 
-@user.field("friendRequestToMe")
-def resolve_user_friend_request_to_me(obj, info, **kwargs):
-    viewer = info.context.get('userId')
-    if not viewer:
-        return []
-    if str(obj.get('id')) != str(viewer):
-        return []
-    return UserRepo.find_friend_request_to_me(viewer)
+@user.field("isFriend")
+def resolve_user_is_friend(obj, info, **kwargs):
+    return _friend_or_pending(obj, info, UserRepo.find_user_friends)
 
-@query.field("ratings")
-def resolve_user_ratings(_, info, **kwargs):
-    idx = kwargs.get('userId')
+@user.field("isPendingFromMe")
+def resolve_user_is_pending_from_me(obj, info, **kwargs):
+    return _friend_or_pending(obj, info, UserRepo.find_friend_request_from_me)
+
+@user.field("isPendingToMe")
+def resolve_user_is_pending_to_me(obj, info, **kwargs):
+    return _friend_or_pending(obj, info, UserRepo.find_friend_request_to_me)
+
+@user.field("pendingFromMe")
+def resolve_pending_from_me(obj, info, **kwargs):
+    my_id = info.context.get('userId')
+    return UserRepo.find_friend_request_from_me(my_id)
+
+@user.field("pendingToMe")
+def resolve_pending_to_me(obj, info, **kwargs):
+    my_id = info.context.get('userId')
+    return UserRepo.find_friend_request_to_me(my_id)
+
+@user.field("ratings")
+def resolve_user_ratings(obj, info, **kwargs):
+    idx = obj.get('id')
     ans = UserRepo.find_ratings_by_user_id(idx)
     result = []
     for record in ans:
@@ -175,22 +190,6 @@ def resolve_delete_friend(_, info, **kwargs):
 
     return True
 
-@query.field("friendRequestFromMe")
-def resolve_friend_request_from_me(_, info):
-    user = info.context.get('userId')
-    if user is None:
-        raise GraphQLError('Authorization Error')
-
-    return UserRepo.find_friend_request_from_me(user)
-
-@query.field("friendRequestToMe")
-def resolve_friend_request_to_me(_, info):
-    user = info.context.get('userId')
-    if user is None:
-        raise GraphQLError('Authorization Error')
-
-    return UserRepo.find_friend_request_to_me(user)
-
 @mutation.field("modifyUserRanking")
 def resolve_modify_user_ranking(_, info, places, movies):
     user = info.context.get('userId')
@@ -203,17 +202,28 @@ def resolve_modify_user_ranking(_, info, places, movies):
     if len(places) != len(set(places)):
         raise GraphQLError("Duplicate ranking positions are not allowed")
 
-    if any(lambda place: place > 5, places):
+    if any(map(lambda place: place > 5, places)):
         raise GraphQLError(f"Only 5 places are supported")
 
-    # lastPlace = UserRepo.GetUserRankingLastPlace(user)
-    # if any(lambda place: lastPlace + 1 < place, places):
-    #     raise GraphQLError(f"Wrong place")
-
+    # wyrownanie miejsc w liscie
     zipped = list(zip(places, movies))
+    zipped = sorted(zipped, key=lambda x: x[0])
+    i = 0
+    def func(zipped_obj):
+        nonlocal i
+        i += 1
+        return i, zipped_obj[1]
+    zipped = list(map(func, zipped))
     try:
         UserRepo.modify_users_ranking(user, zipped)
     except Exception as e:
         raise GraphQLError(f"Ranking update failed: {str(e)}")
     return True
 
+@query.field("rating")
+def resolve_user_rate(_, info, **kwargs):
+    user = info.context.get('userId')
+    if user is None:
+        raise GraphQLError('Authorization Error')
+    movie = kwargs.get("movieId")
+    return UserRepo.find_movie_stars_by_user_id(user, movie)

@@ -4,7 +4,7 @@ import { useQuery } from "@apollo/client/react";
 import MovieCard from "../components/MovieCard";
 import ListSection from "../components/ListSection";
 import AsyncSelect from "react-select/async";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useApolloClient } from "@apollo/client/react";
 import { useNavigate } from "react-router";
 
@@ -43,6 +43,12 @@ export default function Home() {
   const client = useApolloClient();
   const navigate = useNavigate();
   const [kind, setKind] = useState<'movie'|'actor'|'user'>('movie');
+  const [selected, setSelected] = useState<any>(null);
+
+  useEffect(() => {
+    // clear selection when kind changes so previous results don't persist
+    setSelected(null);
+  }, [kind]);
 
   const loadSearch = async (inputValue: string) => {
     if (!inputValue || inputValue.length < 2) return [];
@@ -72,6 +78,9 @@ export default function Home() {
 
   return (
     <main className="container mx-auto p-4">
+      <div>
+        <h1 style={{ fontSize: '5rem'}}> MovieWeb </h1>
+      </div>
       <div className="mb-6 flex gap-3 items-center">
         <select value={kind} onChange={(e) => setKind(e.target.value as any)} className="p-2 border rounded">
           <option value="movie">Movie</option>
@@ -79,7 +88,15 @@ export default function Home() {
           <option value="user">User</option>
         </select>
         <div style={{ minWidth: 300 }}>
-          <AsyncSelect cacheOptions loadOptions={loadSearch} onChange={onSelect} isClearable placeholder={`Search ${kind} by prefix...`} />
+          <AsyncSelect
+            key={kind}
+            cacheOptions
+            loadOptions={loadSearch}
+            onChange={(opt) => { setSelected(opt); onSelect(opt); }}
+            value={selected}
+            isClearable
+            placeholder={`Search ${kind} by prefix...`}
+          />
         </div>
       </div>
       <ListSection title="Najnowsze filmy">

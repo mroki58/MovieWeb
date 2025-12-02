@@ -13,6 +13,10 @@ import { Provider } from "react-redux";
 import AuthStore from "./store/authStore";
 import { ApolloProvider } from "@apollo/client/react";
 import apolloClient from "./apollo/client";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { login } from "./slice/authSlice";
+import { performLogout } from "./slice/authSlice";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -49,10 +53,27 @@ export default function App() {
   return (
     <Provider store={AuthStore}>
       <ApolloProvider client={apolloClient}>
-        <Outlet />
+        <AppInner />
       </ApolloProvider>
     </Provider>
   );
+}
+
+function AppInner() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    // check backend whether the user is logged (JWT cookie present and valid)
+    fetch('/auth/logged', { credentials: 'same-origin' })
+      .then(r => r.json())
+      .then((j) => {
+        if (j && j.logged) dispatch(login());
+        else performLogout();
+      })
+      .catch(() => performLogout());
+  }, [dispatch]);
+
+  return <Outlet />;
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
