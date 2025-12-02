@@ -90,7 +90,7 @@ export default function UserPage() {
         <h2 className="text-xl font-semibold">Movie Ranking</h2>
         <ol className="list-decimal ml-6">
           {user.favoriteMovies.map((fm:any) => (
-            <li key={fm.movie.id}><Link to={`/movie/${fm.movie.id}`}>{fm.movie.title}</Link> (place {fm.position})</li>
+            <li key={fm.movie.id}><Link to={`/movie/${fm.movie.id}`}>{fm.movie.title}</Link></li>
           ))}
         </ol>
       </section>
